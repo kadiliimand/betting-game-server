@@ -29,8 +29,11 @@ public class GameService {
     @Value("${game.betting-window-seconds}")
     private long bettingWindowSeconds;
 
-    @Value("${game.auto-repeat:true}")
+    @Value("${game.auto-repeat}")
     private boolean autoRepeat;
+
+    @Value("${game.repeat-delay-ms}")
+    private long repeatDelayMs;
 
     private Duration bettingWindow;
 
@@ -124,7 +127,7 @@ public class GameService {
         }
 
         if (autoRepeat) {
-            scheduler.schedule(this::startNewRound, 0, TimeUnit.MILLISECONDS);
+            scheduler.schedule(this::startNewRound, repeatDelayMs, TimeUnit.MILLISECONDS);
         }
     }
 
