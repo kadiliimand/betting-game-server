@@ -77,5 +77,31 @@ class GameWebSocketIntegTest {
 
         session.close();
     }
+
+    @Test
+    void shouldRejectInvalidMessagesBecauseNicknameIsMissing() throws Exception {
+        BlockingQueue<String> messages = new LinkedBlockingQueue<>();
+        WebSocketSession session = new StandardWebSocketClient()
+                .doHandshake(new AbstractWebSocketHandler() {
+                    @Override
+                    public void handleTextMessage(WebSocketSession s, TextMessage msg) {
+                        messages.offer(msg.getPayload());
+                    }
+                }, new WebSocketHttpHeaders(), URI.create("ws://localhost:" + port + "/ws/game"))
+                .get();
+
+        session.sendMessage(new TextMessage("""
+        {"type":"BET","number":5,"amount":10}
+        """));
+        assertThat(messages.poll(1, TimeUnit.SECONDS))
+                .contains("VALIDATION")
+                .contains("nickname required");
+
+        session.sendMessage(new TextMessage("{ this is not valid json }"));
+        assertThat(messages.poll(1, TimeUnit.SECONDS))
+                .contains("BAD_JSON");
+
+        session.close();
+    }
 }
 

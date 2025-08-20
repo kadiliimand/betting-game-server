@@ -80,4 +80,32 @@ class GameControllerIntegTest {
 
         assertThat(gameService.getLastSettlement()).isNotNull();
     }
+
+    @Test
+    void shouldHandleEmptyStatesAndClosedRound() throws Exception {
+        mvc.perform(get("/api/rounds/current"))
+                .andExpect(status().isNoContent());
+
+        mvc.perform(get("/api/settlement"))
+                .andExpect(status().isNoContent());
+
+        mvc.perform(post("/api/rounds/start"))
+                .andExpect(status().isOk());
+
+        // Wait until CLOSED
+        Awaitility.await().atMost(Duration.ofSeconds(3)).untilAsserted(() ->
+                mvc.perform(get("/api/rounds/current"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.state").value("CLOSED"))
+        );
+
+        // placing a bet after closure should yield CLOSED 409 -
+        mvc.perform(post("/api/bets")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                        {"nickname":"Joe","number":5,"amount":15}
+                    """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ROUND_CLOSED"));
+    }
 }
