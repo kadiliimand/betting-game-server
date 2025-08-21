@@ -59,7 +59,7 @@ class GameWebSocketHandlerTest {
     @Test
     void shouldAcceptValidBet() throws Exception {
         String payload = """
-            {"type":"BET","nickname":"Neo","number":5,"amount":10}
+            {"type":"BET","nickname":"Joe","number":5,"amount":10}
         """;
         when(gameService.placeBet(any())).thenReturn(PlaceBetResult.ACCEPTED);
         when(session.getId()).thenReturn("s1");
@@ -73,7 +73,7 @@ class GameWebSocketHandlerTest {
     @Test
     void shouldRejectDuplicateBet() throws Exception {
         String payload = """
-            {"type":"BET","nickname":"Neo","number":5,"amount":10}
+            {"type":"BET","nickname":"Joe","number":5,"amount":10}
         """;
         when(gameService.placeBet(any())).thenReturn(PlaceBetResult.DUPLICATE);
 
@@ -87,7 +87,7 @@ class GameWebSocketHandlerTest {
     @Test
     void shouldRejectClosedBet() throws Exception {
         String payload = """
-            {"type":"BET","nickname":"Neo","number":5,"amount":10}
+            {"type":"BET","nickname":"Joe","number":5,"amount":10}
         """;
         when(gameService.placeBet(any())).thenReturn(PlaceBetResult.CLOSED);
 
@@ -101,7 +101,7 @@ class GameWebSocketHandlerTest {
     @Test
     void shouldRejectInvalidBet() throws Exception {
         String payload = """
-            {"type":"BET","nickname":"Neo","number":5,"amount":10}
+            {"type":"BET","nickname":"Joe","number":5,"amount":10}
         """;
         when(gameService.placeBet(any())).thenReturn(PlaceBetResult.INVALID);
 
@@ -124,7 +124,7 @@ class GameWebSocketHandlerTest {
 
         // invalid number
         handler.handleMessage(session, new TextMessage("""
-            {"type":"BET","nickname":"Neo","number":11,"amount":10}
+            {"type":"BET","nickname":"Joe","number":11,"amount":10}
         """));
         verify(session).sendMessage(
                 argThat(msg -> msg instanceof TextMessage tm && tm.getPayload().contains("number must be 1..10"))
@@ -132,7 +132,7 @@ class GameWebSocketHandlerTest {
 
         // invalid amount
         handler.handleMessage(session, new TextMessage("""
-            {"type":"BET","nickname":"Neo","number":5,"amount":0}
+            {"type":"BET","nickname":"Joe","number":5,"amount":0}
         """));
         verify(session).sendMessage(
                 argThat(msg -> msg instanceof TextMessage tm && tm.getPayload().contains("amount must be > 0"))
@@ -205,7 +205,7 @@ class GameWebSocketHandlerTest {
         when(session.isOpen()).thenReturn(true);
         handler.afterConnectionEstablished(session);
 
-        List<WinnerInfo> winners = List.of(new WinnerInfo("Neo", BigDecimal.TEN));
+        List<WinnerInfo> winners = List.of(new WinnerInfo("Joe", BigDecimal.TEN));
         handler.onWinnersAnnounced(1, winners);
 
         verify(session).sendMessage(
@@ -227,7 +227,7 @@ class GameWebSocketHandlerTest {
 
         assertDoesNotThrow(() -> {
             handler.handleMessage(session, new TextMessage("""
-            {"type":"BET","nickname":"Neo","number":5,"amount":10}
+            {"type":"BET","nickname":"Joe","number":5,"amount":10}
         """));
 
             handler.afterConnectionClosed(session, CloseStatus.NORMAL);
